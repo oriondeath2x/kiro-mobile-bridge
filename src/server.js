@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Kiro Mobile Bridge Server
- * A mobile web interface for monitoring Kiro IDE agent sessions from your phone over LAN.
+ * Antigravity Mobile Bridge Server
+ * A mobile web interface for monitoring Antigravity IDE agent sessions from your phone over LAN.
  * Captures snapshots of the chat interface via CDP and lets you send messages remotely.
  */
 
@@ -76,16 +76,17 @@ async function discoverTargets() {
     const { port, targets } = result.value;
     
     try {
-      // Find main VS Code window
+      // Find main VS Code / Antigravity window
       const mainWindowTarget = targets.find(target => {
         const url = (target.url || '').toLowerCase();
+        const title = (target.title || '').toLowerCase();
         return target.type === 'page' && 
-               (url.startsWith('vscode-file://') || url.includes('workbench')) &&
+               (url.startsWith('vscode-file://') || url.includes('workbench') || url.includes('antigravity') || title.includes('antigravity')) &&
                target.webSocketDebuggerUrl;
       });
       
       if (mainWindowTarget && !mainWindowCDP.connection) {
-        console.log(`[Discovery] Found main VS Code window: ${mainWindowTarget.title}`);
+        console.log(`[Discovery] Found main window: ${mainWindowTarget.title}`);
         try {
           const cdp = await connectToCDP(mainWindowTarget.webSocketDebuggerUrl);
           mainWindowCDP.connection = cdp;
@@ -106,10 +107,20 @@ async function discoverTargets() {
         foundMainWindow = true;
       }
       
-      // Find Kiro Agent webviews
+      // Find Antigravity Agent webviews
       const kiroAgentTargets = targets.filter(target => {
         const url = (target.url || '').toLowerCase();
-        return (url.includes('kiroagent') || url.includes('vscode-webview')) && 
+        const title = (target.title || '').toLowerCase();
+
+        // Check for Antigravity specific agent panels
+        const isAntigravityAgent = url.includes('workbench-jetski-agent.html') ||
+                                   url.includes('cascade-panel.html') ||
+                                   title.includes('launchpad');
+
+        // Legacy/Fallback check
+        const isLegacyAgent = (url.includes('kiroagent') || url.includes('vscode-webview'));
+
+        return (isAntigravityAgent || isLegacyAgent) &&
                target.webSocketDebuggerUrl && target.type !== 'page';
       });
       
@@ -372,12 +383,12 @@ wss.on('connection', (ws, req) => {
 httpServer.listen(PORT, '0.0.0.0', () => {
   const localIP = getLocalIP();
   console.log('');
-  console.log('Kiro Mobile Bridge');
+  console.log('Antigravity Mobile Bridge');
   console.log('─────────────────────');
   console.log(`Local:   http://localhost:${PORT}`);
   console.log(`Network: http://${localIP}:${PORT}`);
   console.log('');
-  console.log('Open the Network URL on your phone to monitor Kiro.');
+  console.log('Open the Network URL on your phone to monitor Antigravity.');
   console.log('');
   
   // Start discovery and polling

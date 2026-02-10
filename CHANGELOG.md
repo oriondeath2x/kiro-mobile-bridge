@@ -52,7 +52,7 @@ All notable changes to this project will be documented in this file.
 - Simplify product description to focus on chat, files, and editor panels
 - Add MIT License file for project
 - Initial release
-- Mobile web interface for monitoring Kiro IDE agent sessions
+- Mobile web interface for monitoring Antigravity IDE agent sessions
 - Real-time chat, files, and editor panels
 - WebSocket-based live updates
-- Auto-discovery of Kiro instances on ports 9000-9003
+- Auto-discovery of Antigravity instances on ports 9000-9003

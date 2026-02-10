@@ -13,18 +13,25 @@ export async function captureMetadata(cdp) {
   const script = `(function() {
     let chatTitle = '';
     let isActive = false;
+    let targetDoc = document;
+
+    // Check for Kiro's active-frame or Antigravity's agentPanel
+    let activeFrame = document.getElementById('active-frame');
+    if (!activeFrame) activeFrame = document.getElementById('antigravity.agentPanel');
+
+    if (activeFrame && activeFrame.contentDocument) targetDoc = activeFrame.contentDocument;
     
     const titleSelectors = ['.chat-title', '.conversation-title', '[data-testid="chat-title"]', '.chat-header h1', '.chat-header h2'];
     for (const selector of titleSelectors) {
-      const el = document.querySelector(selector);
+      const el = targetDoc.querySelector(selector);
       if (el && el.textContent) { chatTitle = el.textContent.trim(); break; }
     }
     
     const activeIndicators = ['.typing-indicator', '.loading-indicator', '[data-loading="true"]'];
     for (const selector of activeIndicators) {
-      if (document.querySelector(selector)) { isActive = true; break; }
+      if (targetDoc.querySelector(selector)) { isActive = true; break; }
     }
-    isActive = isActive || document.hasFocus();
+    isActive = isActive || document.hasFocus() || (targetDoc !== document && targetDoc.hasFocus());
     
     return { chatTitle, isActive };
   })()`;
@@ -53,7 +60,11 @@ export async function captureCSS(cdp) {
   const script = `(function() {
     let css = '';
     let targetDoc = document;
-    const activeFrame = document.getElementById('active-frame');
+
+    // Check for Kiro's active-frame or Antigravity's agentPanel
+    let activeFrame = document.getElementById('active-frame');
+    if (!activeFrame) activeFrame = document.getElementById('antigravity.agentPanel');
+
     if (activeFrame && activeFrame.contentDocument) targetDoc = activeFrame.contentDocument;
     
     const rootStyles = window.getComputedStyle(targetDoc.documentElement);
@@ -134,7 +145,10 @@ export async function captureSnapshot(cdp) {
     let targetDoc = document;
     let targetBody = document.body;
     
-    const activeFrame = document.getElementById('active-frame');
+    // Check for Kiro's active-frame or Antigravity's agentPanel
+    let activeFrame = document.getElementById('active-frame');
+    if (!activeFrame) activeFrame = document.getElementById('antigravity.agentPanel');
+
     if (activeFrame && activeFrame.contentDocument) {
       targetDoc = activeFrame.contentDocument;
       targetBody = targetDoc.body;
@@ -295,7 +309,11 @@ export async function captureEditor(cdp) {
   
   const script = `(function() {
     let targetDoc = document;
-    const activeFrame = document.getElementById('active-frame');
+
+    // Check for Kiro's active-frame or Antigravity's agentPanel
+    let activeFrame = document.getElementById('active-frame');
+    if (!activeFrame) activeFrame = document.getElementById('antigravity.agentPanel');
+
     if (activeFrame && activeFrame.contentDocument) targetDoc = activeFrame.contentDocument;
     
     const result = { html: '', fileName: '', language: '', content: '', lineCount: 0, hasContent: false };
