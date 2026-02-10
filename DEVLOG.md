@@ -1,19 +1,19 @@
-# Development Log - Kiro Mobile Bridge
+# Development Log - Antigravity Mobile Bridge
 
-**Project**: Kiro Mobile Bridge - Real-time mobile monitoring for Kiro IDE via Chrome DevTools Protocol  
+**Project**: Antigravity Mobile Bridge - Real-time mobile monitoring for Antigravity IDE via Chrome DevTools Protocol
 **Duration**: January 21-26, 2026  
 **Total Time**: ~74 hours
 
 ## Overview
 
-Building a mobile web interface to monitor and interact with Kiro IDE agent sessions from a phone over LAN. Uses Chrome DevTools Protocol (CDP) to capture snapshots of chat, file explorer, and editor panels in real-time.
+Building a mobile web interface to monitor and interact with Antigravity IDE agent sessions from a phone over LAN. Uses Chrome DevTools Protocol (CDP) to capture snapshots of chat, file explorer, and editor panels in real-time.
 
 ---
 
 ## Day 1 (Jan 21) - Foundation & CDP Discovery [18h]
 
 ### Morning: Research & Spec-Driven Planning [4h]
-After researching CDP capabilities and Kiro's architecture, we started with Kiro's spec system using Kiro IDE to formalize the design before writing any code.
+After researching CDP capabilities and Antigravity's architecture, we started with Kiro's spec system using Kiro IDE to formalize the design before writing any code.
 
 **Created specs at `.kiro/specs/kiro-mobile-bridge/`:**
 - **requirements.md** - 6 user stories with acceptance criteria covering server startup, CDP discovery, snapshot capture, real-time updates, message sending, and mobile UI
@@ -61,7 +61,7 @@ This spec-first approach helped us:
 ### Evening: Mobile UI [8h]
 - **Stack**: Vanilla HTML/CSS/JS (no build step)
 - **Features**: Tab navigation, touch-optimized buttons (44px min)
-- **Styling**: Preserved original Kiro CSS for authentic look
+- **Styling**: Preserved original Antigravity CSS for authentic look
 - **Challenge**: Mobile responsiveness with complex captured HTML
 - **Solution**: Viewport meta tags, CSS containment
 
@@ -70,7 +70,7 @@ This spec-first approach helped us:
 ## Day 3 (Jan 23) - Polish & Documentation [16h]
 
 ### Morning: Message Injection [4h]
-- **Feature**: Send messages to Kiro from mobile
+- **Feature**: Send messages to Antigravity from mobile
 - **Security**: Input sanitization for CDP injection
 - **Challenge**: Special characters breaking template literals
 - **Solution**: Escape function for backslash, backtick, dollar, newline
@@ -133,7 +133,7 @@ src/
 
 **Additional Improvements:**
 - Extended port scanning to include 9222, 9229 (common debug ports)
-- Added Tasks panel for viewing Kiro spec task files
+- Added Tasks panel for viewing Antigravity spec task files
 - Improved file reading with workspace root detection
 - Enhanced click service with toggle/switch support
 
@@ -279,4 +279,3 @@ Located at `.kiro/specs/kiro-mobile-bridge/`:
 - Always use try-catch-finally for flags that control flow
 - Race conditions between client and server need careful handling
 - Steering documents work best when they're prescriptive (guiding decisions) rather than just descriptive (documenting what exists).
-

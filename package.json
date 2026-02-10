@@ -1,11 +1,11 @@
 {
-  "name": "kiro-mobile-bridge",
+  "name": "antigravity-bridge",
   "version": "1.0.21",
-  "description": "A simple mobile web interface for monitoring Kiro IDE agent sessions from your phone over LAN",
+  "description": "A simple mobile web interface for monitoring Antigravity IDE agent sessions from your phone over LAN",
   "type": "module",
   "main": "src/server.js",
   "bin": {
-    "kiro-mobile-bridge": "src/server.js"
+    "antigravity-bridge": "src/server.js"
   },
   "scripts": {
     "start": "node src/server.js"
@@ -15,7 +15,7 @@
     "README.md"
   ],
   "keywords": [
-    "kiro",
+    "antigravity",
     "mobile",
     "bridge",
     "cdp",
@@ -28,7 +28,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/4regab/kiro-mobile-bridge"
+    "url": "https://github.com/4regab/antigravity-bridge"
   },
   "engines": {
     "node": ">=18.0.0"

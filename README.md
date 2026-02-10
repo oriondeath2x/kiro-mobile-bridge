@@ -1,6 +1,6 @@
-# Kiro Mobile Bridge
+# Antigravity Mobile Bridge
 
-A lightweight mobile interface that lets you monitor and control Kiro IDE agent sessions from your phone over LAN, with a live preview of chat, tasks, and code via Chrome DevTools Protocol.
+A lightweight mobile interface that lets you monitor and control Antigravity IDE agent sessions from your phone over LAN, with a live preview of chat, tasks, and code via Chrome DevTools Protocol.
 
 <img width="1829" height="1065" alt="Untitled design (4)" src="https://github.com/user-attachments/assets/d548c43b-4501-4d66-aed7-ad021a44f9cb" />
 
@@ -8,42 +8,42 @@ A lightweight mobile interface that lets you monitor and control Kiro IDE agent 
 ## Features
 
 - 📱 Mobile-optimized web interface with tab navigation
-- 💬 **Chat** - View and send messages to Kiro's agent
+- 💬 **Chat** - View and send messages to Antigravity's agent
 - 📝 **Code** - Browse file explorer and view files with syntax highlighting
-- 📋 **Tasks** - View and navigate Kiro spec task files
+- 📋 **Tasks** - View and navigate Antigravity spec task files
 - 🔄 Real-time updates via WebSocket with adaptive polling
 
 ## Prerequisites
 
 - **Node.js** 18+ (uses ES modules)
-- **Kiro IDE** 
+- **Antigravity IDE**
 
 ## Quick Start
 
-### 1. Enable CDP in Kiro
+### 1. Enable CDP in Antigravity
 
-Start Kiro with the remote debugging port enabled:
+Start Antigravity with the remote debugging port enabled:
 
-**Run Kiro with debugging port on CMD/Terminal:**
+**Run Antigravity with debugging port on CMD/Terminal:**
 ```bash
-kiro --remote-debugging-port=9000
+antigravity --remote-debugging-port=9000
 ```
 
-**Important:** Your project must be open in Kiro before you close it - the bridge needs an active session to detect and connect to. After that, start Kiro from the terminal with the remote debugging port enabled.
+**Important:** Your project must be open in Antigravity before you close it - the bridge needs an active session to detect and connect to. After that, start Antigravity from the terminal with the remote debugging port enabled.
 
 ### 2. Run with npx (Recommended)
 
 Start Server
 
 ```bash
-npx kiro-mobile-bridge
+npx antigravity-bridge
 ```
 
 #### Alternative: Clone and Run
 
 ```bash
 git clone 
-cd kiro-mobile-bridge
+cd antigravity-bridge
 npm install
 npm start
 ```
@@ -51,18 +51,18 @@ npm start
 You'll see output like:
 
 ```
-Kiro Mobile Bridge
+Antigravity Mobile Bridge
 ─────────────────────
 Local:   http://localhost:3000
 Network: http://192.168.16.106:3000
-Open the Network URL on your phone to monitor Kiro.
+Open the Network URL on your phone to monitor Antigravity.
 ```
 
 ### 3. Open on Your Phone
 
 1. Make sure your phone is on the **same WiFi network** as your computer
 2. Open the **Network URL** (e.g., `http://192.168.1.100:3000`) in your phone's browser
-3. The interface will automatically connect and show your Kiro session
+3. The interface will automatically connect and show your Antigravity session
 4. Use the tabs to switch between Chat, Code, and Tasks panels
 
 
@@ -70,7 +70,7 @@ Open the Network URL on your phone to monitor Kiro.
 
 ```
 ┌─────────────────┐     CDP      ┌─────────────────┐
-│   Kiro IDE      │◄────────────►│  Bridge Server  │
+│ Antigravity IDE │◄────────────►│  Bridge Server  │
 │ (port 9000-9003)│              │   (port 3000)   │
 └─────────────────┘              └────────┬────────┘
                                           │
@@ -82,17 +82,17 @@ Open the Network URL on your phone to monitor Kiro.
                                  └─────────────────┘
 ```
 
-1. **Discovery**: Server scans ports 9000-9003, 9222, 9229 for Kiro instances (adaptive: 10s → 30s when stable)
-2. **Connection**: Connects to Kiro via CDP WebSocket
+1. **Discovery**: Server scans ports 9000-9003, 9222, 9229 for Antigravity instances (adaptive: 10s → 30s when stable)
+2. **Connection**: Connects to Antigravity via CDP WebSocket
 3. **Snapshots**: Captures chat, editor, and tasks with adaptive polling (1s active → 3s idle)
-4. **Messages**: Injects text into Kiro's chat input via CDP
+4. **Messages**: Injects text into Antigravity's chat input via CDP
 
 ## Troubleshooting
 
 #### "No sessions available"
 
-- Make sure Kiro is running with `--remote-debugging-port=9000`
-- Check that Kiro has a chat/agent session open
+- Make sure Antigravity is running with `--remote-debugging-port=9000`
+- Check that Antigravity has a chat/agent session open
 - Wait a few seconds for discovery 
 
 #### Can't connect from phone

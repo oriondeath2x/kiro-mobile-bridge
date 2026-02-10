@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Kiro Mobile Bridge Server
- * A mobile web interface for monitoring Kiro IDE agent sessions from your phone over LAN.
+ * Antigravity Mobile Bridge Server
+ * A mobile web interface for monitoring Antigravity IDE agent sessions from your phone over LAN.
  * Captures snapshots of the chat interface via CDP and lets you send messages remotely.
  */
 
@@ -76,16 +76,17 @@ async function discoverTargets() {
     const { port, targets } = result.value;
     
     try {
-      // Find main VS Code window
+      // Find main VS Code / Antigravity window
       const mainWindowTarget = targets.find(target => {
         const url = (target.url || '').toLowerCase();
+        const title = (target.title || '').toLowerCase();
         return target.type === 'page' && 
-               (url.startsWith('vscode-file://') || url.includes('workbench')) &&
+               (url.startsWith('vscode-file://') || url.includes('workbench') || url.includes('antigravity') || title.includes('antigravity')) &&
                target.webSocketDebuggerUrl;
       });
       
       if (mainWindowTarget && !mainWindowCDP.connection) {
-        console.log(`[Discovery] Found main VS Code window: ${mainWindowTarget.title}`);
+        console.log(`[Discovery] Found main window: ${mainWindowTarget.title}`);
         try {
           const cdp = await connectToCDP(mainWindowTarget.webSocketDebuggerUrl);
           mainWindowCDP.connection = cdp;
@@ -106,11 +107,24 @@ async function discoverTargets() {
         foundMainWindow = true;
       }
       
-      // Find Kiro Agent webviews
+      // Find Antigravity Agent webviews
       const kiroAgentTargets = targets.filter(target => {
         const url = (target.url || '').toLowerCase();
-        return (url.includes('kiroagent') || url.includes('vscode-webview')) && 
-               target.webSocketDebuggerUrl && target.type !== 'page';
+        const title = (target.title || '').toLowerCase();
+
+        // Check for Antigravity specific agent panels
+        const isAntigravityAgent = url.includes('workbench-jetski-agent.html') ||
+                                   url.includes('cascade-panel.html') ||
+                                   title.includes('launchpad');
+
+        // Legacy/Fallback check
+        const isLegacyAgent = (url.includes('kiroagent') || url.includes('vscode-webview'));
+
+        // Relax type check for Antigravity agent panels as they might appear as pages
+        const isValidType = target.type !== 'page' || isAntigravityAgent;
+
+        return (isAntigravityAgent || isLegacyAgent) &&
+               target.webSocketDebuggerUrl && isValidType;
       });
       
       for (const target of kiroAgentTargets) {
@@ -155,17 +169,45 @@ async function discoverTargets() {
       console.debug(`[Discovery] Error scanning port ${port}: ${err.message}`);
     }
   }
+
+  // Fallback: If no dedicated agent targets found, use Main Window as fallback
+  // This supports cases where the agent is an iframe within the main window (not a separate target)
+  const FALLBACK_ID = 'main-window-fallback';
+  if (foundCascadeIds.size === 0 && mainWindowCDP.connection) {
+    foundCascadeIds.add(FALLBACK_ID);
+    if (!cascades.has(FALLBACK_ID)) {
+      console.log('[Discovery] No agent targets found. Falling back to Main Window.');
+      stateChanged = true;
+      cascades.set(FALLBACK_ID, {
+        id: FALLBACK_ID,
+        cdp: mainWindowCDP.connection, // Share connection
+        metadata: { windowTitle: 'Main Window (Fallback)', chatTitle: 'Antigravity', isActive: true },
+        snapshot: null,
+        css: null,
+        snapshotHash: null,
+        editor: null,
+        editorHash: null,
+        isFallback: true // Mark as fallback to prevent closing shared connection
+      });
+      broadcastCascadeList();
+    }
+  }
   
   // Clean up disconnected targets
   for (const [cascadeId, cascade] of cascades) {
     if (!foundCascadeIds.has(cascadeId)) {
       console.log(`[Discovery] Target no longer available: ${cascadeId}`);
       stateChanged = true;
-      try { 
-        cascade.cdp.close(); 
-      } catch (e) {
-        console.debug(`[Discovery] Error closing cascade ${cascadeId}: ${e.message}`);
+
+      // Only close connection if it's NOT a fallback (shared) connection
+      if (!cascade.isFallback) {
+        try {
+          cascade.cdp.close();
+        } catch (e) {
+          console.debug(`[Discovery] Error closing cascade ${cascadeId}: ${e.message}`);
+        }
       }
+
       cascades.delete(cascadeId);
       broadcastCascadeList();
     }
@@ -372,12 +414,12 @@ wss.on('connection', (ws, req) => {
 httpServer.listen(PORT, '0.0.0.0', () => {
   const localIP = getLocalIP();
   console.log('');
-  console.log('Kiro Mobile Bridge');
+  console.log('Antigravity Mobile Bridge');
   console.log('─────────────────────');
   console.log(`Local:   http://localhost:${PORT}`);
   console.log(`Network: http://${localIP}:${PORT}`);
   console.log('');
-  console.log('Open the Network URL on your phone to monitor Kiro.');
+  console.log('Open the Network URL on your phone to monitor Antigravity.');
   console.log('');
   
   // Start discovery and polling

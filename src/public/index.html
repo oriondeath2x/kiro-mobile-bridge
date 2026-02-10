@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#1e1e1e">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Kiro Mobile Bridge</title>
+  <title>Antigravity Mobile Bridge</title>
   <link rel="stylesheet" href="https://unpkg.com/@vscode/codicons@0.0.35/dist/codicon.css">
   <style>
     /* =============================================================================
@@ -753,7 +753,7 @@
     }
 
     /* =============================================================================
-       Syntax Highlighting (Kiro Dark Theme)
+       Syntax Highlighting (Antigravity Dark Theme)
        ============================================================================= */
     .tok-kw {
       color: #c586c0;
@@ -932,7 +932,7 @@
       <div class="panel active" id="chatPanel">
         <div class="chat-container" id="chatContainer">
           <div class="loading" id="chatLoading">
-            <div class="loading-spinner"></div><span>Waiting for Kiro...</span>
+            <div class="loading-spinner"></div><span>Waiting for Antigravity...</span>
           </div>
           <div class="chat-content" id="chatContent" style="display: none;"></div>
         </div>
@@ -1001,7 +1001,7 @@
     // =============================================================================
     let ws = null, reconnectAttempts = 0, reconnectTimeout = null;
     let cascades = [], selectedCascadeId = null, currentStyles = null;
-    let isTypingInKiroInput = false, activePanel = 'chat';
+    let isTypingInAntigravityInput = false, activePanel = 'chat';
     let lastSuccessfulSnapshot = null, navigationPending = false;
     let workspaceFiles = [], fileTreeOpen = false, expandedFolders = new Set();
     let updateDebounceTimer = null, isRendering = false;
@@ -1106,7 +1106,7 @@
         if (!selectedCascadeId && cascades.length > 0) selectCascade(cascades[0].id);
       } else if (data.type === 'snapshot_update' && data.cascadeId === selectedCascadeId) {
         const panel = data.panel || 'chat';
-        if (!isTypingInKiroInput && panel === activePanel && !isRendering) {
+        if (!isTypingInAntigravityInput && panel === activePanel && !isRendering) {
           if (updateDebounceTimer) clearTimeout(updateDebounceTimer);
           updateDebounceTimer = setTimeout(() => fetchPanelContent(panel, data.cascadeId, true), 50);
         }
@@ -1123,7 +1123,7 @@
       if (cascadeId) {
         fetchStyles(cascadeId).then(() => fetchPanelContent(activePanel, cascadeId));
       } else {
-        showLoading('chat', 'Waiting for Kiro...');
+        showLoading('chat', 'Waiting for Antigravity...');
       }
     }
 
@@ -1172,7 +1172,7 @@
       try {
         const r = await fetch(`/editor/${cascadeId}`);
         if (!r.ok) {
-          showEmptyState('editor', 'codicon-file-code', 'No file is currently open. Open a file in Kiro to view it here.');
+          showEmptyState('editor', 'codicon-file-code', 'No file is currently open. Open a file in Antigravity to view it here.');
           return;
         }
         renderEditorSnapshot(await r.json(), isUpdate);
@@ -1250,12 +1250,12 @@
         selectedTaskIndex = parseInt(e.target.value, 10);
         if (tasksData[selectedTaskIndex]) {
           renderTaskContent(tasksData[selectedTaskIndex]);
-          await openSpecInKiro(tasksData[selectedTaskIndex].name);
+          await openSpecInAntigravity(tasksData[selectedTaskIndex].name);
         }
       };
     }
 
-    async function openSpecInKiro(specName) {
+    async function openSpecInAntigravity(specName) {
       if (!selectedCascadeId || !specName) return;
       showToast(`Opening ${specName}...`, 1500);
       try {
@@ -1363,7 +1363,7 @@
     // =============================================================================
     function getBaseStyles() {
       return `<style>
-        /* FIXED THEME - Override all Kiro theme variables to prevent adaptive colors */
+        /* FIXED THEME - Override all Antigravity theme variables to prevent adaptive colors */
         :root, body, #root, .app { 
           font-family: "Segoe WPC", "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, Ubuntu, "Droid Sans", sans-serif !important; 
           font-size: 13px;
@@ -1426,7 +1426,7 @@
           border-color: #3c3c3c !important;
         }
         
-        /* FIXED THEME: Force Kiro's tab bar to use fixed dark colors - SCOPED */
+        /* FIXED THEME: Force Antigravity's tab bar to use fixed dark colors - SCOPED */
         #chatContent [class*="tab-bar"], #chatContent [class*="tabBar"], #chatContent [class*="TabBar"],
         #chatContent [class*="tabs-container"], #chatContent [class*="tabsContainer"], #chatContent [class*="TabsContainer"],
         #chatContent [class*="tabs-header"], #chatContent [class*="tabsHeader"], #chatContent [class*="TabsHeader"],
@@ -1441,7 +1441,7 @@
           border-color: #3c3c3c !important;
         }
         
-        /* FIXED THEME: Force Kiro's tabs to use fixed colors - SCOPED */
+        /* FIXED THEME: Force Antigravity's tabs to use fixed colors - SCOPED */
         #chatContent [role="tab"], #chatContent [class*="tab-item"], #chatContent [class*="tabItem"], #chatContent [class*="TabItem"],
         #chatContent [class*="session-tab"], #chatContent [class*="sessionTab"], #chatContent [class*="SessionTab"],
         #chatContent [class*="panel-tab"], #chatContent [class*="panelTab"], #chatContent [class*="PanelTab"],
@@ -1861,12 +1861,12 @@
       </style>`;
     }
 
-    // Post-override styles - applied AFTER Kiro's CSS to force fixed dark theme
+    // Post-override styles - applied AFTER Antigravity's CSS to force fixed dark theme
     // IMPORTANT: All selectors are scoped to #chatContent to avoid affecting other panels
     function getPostOverrideStyles() {
       return `<style>
         /* =============================================================================
-           POST-OVERRIDE: Force fixed dark theme AFTER Kiro's CSS
+           POST-OVERRIDE: Force fixed dark theme AFTER Antigravity's CSS
            SCOPED TO #chatContent ONLY - do not affect Tasks/Editor panels
            ============================================================================= */
 
@@ -2119,7 +2119,7 @@
 
         let html = getBaseStyles();
         if (currentStyles) html += `<style>${currentStyles}</style>`;
-        // CRITICAL: Add post-override styles AFTER Kiro's CSS to force fixed theme
+        // CRITICAL: Add post-override styles AFTER Antigravity's CSS to force fixed theme
         html += getPostOverrideStyles();
         html += snapshot.html || '';
 
@@ -3015,16 +3015,16 @@
       inputSelectors.forEach(selector => {
         content.querySelectorAll(selector).forEach(el => {
           el.style.cursor = 'text';
-          el.addEventListener('focus', () => { isTypingInKiroInput = true; });
-          el.addEventListener('blur', () => { setTimeout(() => { isTypingInKiroInput = false; }, 200); });
+          el.addEventListener('focus', () => { isTypingInAntigravityInput = true; });
+          el.addEventListener('blur', () => { setTimeout(() => { isTypingInAntigravityInput = false; }, 200); });
           el.addEventListener('keydown', async (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
               const text = el.textContent || el.value || '';
               if (text.trim()) {
-                await sendToKiro(text.trim());
+                await sendToAntigravity(text.trim());
                 el.textContent = ''; el.innerHTML = '';
-                isTypingInKiroInput = false;
+                isTypingInAntigravityInput = false;
               }
             }
           });
@@ -3092,9 +3092,9 @@
           }
 
           if (inputText.trim()) {
-            await sendToKiro(inputText.trim());
+            await sendToAntigravity(inputText.trim());
             // Don't clear input here - the server-side injection handles everything
-            // Clearing here can cause race conditions with Kiro's UI
+            // Clearing here can cause race conditions with Antigravity's UI
           } else {
             showToast('Type a message first', 1500);
           }
@@ -3110,7 +3110,7 @@
         if (btn.querySelector('.codicon-arrow-up, .codicon-send')) attachSendHandler(btn);
       });
 
-      // Toggle switches - send click to Kiro and let snapshot refresh show actual state
+      // Toggle switches - send click to Antigravity and let snapshot refresh show actual state
       content.querySelectorAll('[role="switch"], input[type="checkbox"][role="switch"]').forEach(toggle => {
         const wrapper = toggle.closest('.kiro-toggle-switch') || toggle;
         wrapper.style.cursor = 'pointer';
@@ -3121,12 +3121,12 @@
 
           console.log('[Toggle] Clicked:', toggleLabel);
 
-          // Send click to Kiro - don't try to predict the new state
-          // Just let the snapshot refresh show the actual state from Kiro
-          await sendClickToKiro({ tag: 'div', text: toggleLabel, role: 'switch', isToggle: true });
+          // Send click to Antigravity - don't try to predict the new state
+          // Just let the snapshot refresh show the actual state from Antigravity
+          await sendClickToAntigravity({ tag: 'div', text: toggleLabel, role: 'switch', isToggle: true });
 
-          // Refresh snapshot after toggle to get actual Kiro state
-          // Use 250ms delay to allow Kiro to process the toggle
+          // Refresh snapshot after toggle to get actual Antigravity state
+          // Use 250ms delay to allow Antigravity to process the toggle
           setTimeout(() => fetchChatSnapshot(selectedCascadeId), 250);
 
           return false;
@@ -3228,7 +3228,7 @@
                 console.log('[Click] Notification button:', clickInfo.text || clickInfo.ariaLabel || 'icon-button');
               }
 
-              await sendClickToKiro(clickInfo);
+              await sendClickToAntigravity(clickInfo);
               // Refresh after clicking notification buttons
               setTimeout(() => fetchChatSnapshot(selectedCascadeId), 200);
               return false;
@@ -3279,7 +3279,7 @@
               isIconButton: !btn.textContent?.trim()
             };
             console.log('[Click] Command panel action:', actionType);
-            await sendClickToKiro(clickInfo);
+            await sendClickToAntigravity(clickInfo);
             setTimeout(() => fetchChatSnapshot(selectedCascadeId), 200);
             return false;
           };
@@ -3338,7 +3338,7 @@
             };
 
             console.log('[Click] Snackbar choice (priority):', clickInfo.text.substring(0, 50));
-            await sendClickToKiro(clickInfo);
+                await sendClickToAntigravity(clickInfo);
             setTimeout(() => fetchChatSnapshot(selectedCascadeId), 200);
             return false;
           };
@@ -3438,7 +3438,7 @@
                   isDialogChoice: true
                 };
                 console.log('[Click] Dialog choice:', clickInfo.text.substring(0, 50));
-                await sendClickToKiro(clickInfo);
+                await sendClickToAntigravity(clickInfo);
                 // Refresh after clicking dialog choice
                 setTimeout(() => fetchChatSnapshot(selectedCascadeId), 200);
                 return false;
@@ -3516,7 +3516,7 @@
                 isIconButton: true
               };
               console.log('[Click] Tool action button:', action, ariaLabel || title);
-              await sendClickToKiro(clickInfo);
+              await sendClickToAntigravity(clickInfo);
               // Refresh after clicking tool action
               setTimeout(() => fetchChatSnapshot(selectedCascadeId), 200);
               return false;
@@ -3550,7 +3550,7 @@
               isIconButton: !btn.textContent?.trim()
             };
             console.log('[Click] Tool action (aria):', matchedAction);
-            await sendClickToKiro(clickInfo);
+            await sendClickToAntigravity(clickInfo);
             setTimeout(() => fetchChatSnapshot(selectedCascadeId), 200);
             return false;
           };
@@ -3577,7 +3577,7 @@
           e.preventDefault(); e.stopPropagation();
           const labelEl = tab.querySelector('.kiro-tabs-item-label, [class*="label"]');
           const labelText = labelEl ? labelEl.textContent.trim() : tab.textContent.trim();
-          await sendClickToKiro({ tag: 'div', text: labelText, role: 'tab', isTab: true, tabLabel: labelText });
+          await sendClickToAntigravity({ tag: 'div', text: labelText, role: 'tab', isTab: true, tabLabel: labelText });
           return false;
         };
       });
@@ -3608,7 +3608,7 @@
                 className: el.className || '',
                 isModelSelector: true
               };
-              await sendClickToKiro(clickInfo);
+              await sendClickToAntigravity(clickInfo);
               // Refresh snapshot after clicking to show dropdown
               setTimeout(() => fetchChatSnapshot(selectedCascadeId), 150);
               return false;
@@ -3660,7 +3660,7 @@
                 isModelOption: true,
                 isModelSelector: false
               };
-              await sendClickToKiro(clickInfo);
+              await sendClickToAntigravity(clickInfo);
               // Refresh snapshot after selecting option
               setTimeout(() => fetchChatSnapshot(selectedCascadeId), 200);
               return false;
@@ -3687,7 +3687,7 @@
               className: btn.className || '',
               isModelSelector: true
             };
-            await sendClickToKiro(clickInfo);
+            await sendClickToAntigravity(clickInfo);
             setTimeout(() => fetchChatSnapshot(selectedCascadeId), 150);
             return false;
           };
@@ -3730,13 +3730,13 @@
             role: el.getAttribute('role') || '',
             className: el.className || ''
           };
-          await sendClickToKiro(clickInfo);
+          await sendClickToAntigravity(clickInfo);
           return false;
         };
       });
 
       // Chat history items - detect and make clickable
-      // Kiro history items typically have: icon, title text, and date
+      // Antigravity history items typically have: icon, title text, and date
       // We need to find these items even if they don't have semantic roles
 
       // First, find all potential history item containers
@@ -3835,7 +3835,7 @@
             isHistoryItem: true
           };
 
-          await sendClickToKiro(clickInfo);
+          await sendClickToAntigravity(clickInfo);
 
           // Refresh snapshot after clicking history item
           setTimeout(() => fetchChatSnapshot(selectedCascadeId), 200);
@@ -3845,7 +3845,7 @@
     }
 
     // =============================================================================
-    // Kiro Communication
+    // Antigravity Communication
     // =============================================================================
 
     // Rate limiting for message sending
@@ -3853,7 +3853,7 @@
     const MESSAGE_RATE_LIMIT_MS = 500; // Minimum 500ms between messages
     let pendingMessage = false;
 
-    async function sendToKiro(message) {
+    async function sendToAntigravity(message) {
       if (!message || !selectedCascadeId) return;
 
       // Rate limiting check
@@ -3896,7 +3896,7 @@
       }
     }
 
-    async function sendClickToKiro(clickInfo, retryCount = 0) {
+    async function sendClickToAntigravity(clickInfo, retryCount = 0) {
       if (!selectedCascadeId) return;
 
       const isNavigation = clickInfo.ariaLabel?.toLowerCase().includes('back') ||
@@ -3919,7 +3919,7 @@
         if (result.needsRetry && clickInfo.isModelOption && retryCount < 2) {
           console.log('[Click] Dropdown opened, retrying option click in 200ms...');
           await new Promise(resolve => setTimeout(resolve, 200));
-          return sendClickToKiro(clickInfo, retryCount + 1);
+          return sendClickToAntigravity(clickInfo, retryCount + 1);
         }
 
         if (isNavigation) setTimeout(() => fetchChatSnapshot(selectedCascadeId), 150);
@@ -3982,14 +3982,14 @@
           console.log('[OpenFile] Direct read failed:', errorData.error || readResult.status);
         }
 
-        // Fallback: Click file link in Kiro to open it there
+        // Fallback: Click file link in Antigravity to open it there
         await fetch(`/click/${selectedCascadeId}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ tag: 'a', text: cleanPath, isFileLink: true, filePath: cleanPath })
         });
 
-        // Wait for Kiro to open the file
+        // Wait for Antigravity to open the file
         await new Promise(resolve => setTimeout(resolve, 800));
 
         const fetchEditor = async () => {
@@ -4010,7 +4010,7 @@
         if (!await fetchEditor()) {
           await new Promise(resolve => setTimeout(resolve, 500));
           if (!await fetchEditor()) {
-            showEmptyState('editor', 'codicon-file-code', `Could not load ${cleanPath}. Try opening it in Kiro first.`);
+            showEmptyState('editor', 'codicon-file-code', `Could not load ${cleanPath}. Try opening it in Antigravity first.`);
           }
         }
       } catch (e) {

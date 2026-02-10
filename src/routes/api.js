@@ -121,7 +121,7 @@ export function createApiRouter(cascades, mainWindowCDP) {
       };
       
       // Check if dropdown is open
-      const openDropdown = targetDoc.querySelector('.kiro-dropdown-menu, [class*="dropdown-menu"], [class*="dropdown-content"], [role="listbox"], [role="menu"]');
+      const openDropdown = targetDoc.querySelector('.kiro-dropdown-menu, .antigravity-dropdown-menu, [class*="dropdown-menu"], [class*="dropdown-content"], [role="listbox"], [role="menu"]');
       if (openDropdown && openDropdown.offsetParent !== null) {
         results.dropdownOpen = true;
         results.dropdownContainer = {
@@ -132,7 +132,7 @@ export function createApiRouter(cascades, mainWindowCDP) {
         };
         
         // Find all items in the dropdown
-        const items = openDropdown.querySelectorAll('.kiro-dropdown-item, [role="option"], [role="menuitem"], [class*="dropdown-item"], [class*="menu-item"], > div, > button');
+        const items = openDropdown.querySelectorAll('.kiro-dropdown-item, .antigravity-dropdown-item, [role="option"], [role="menuitem"], [class*="dropdown-item"], [class*="menu-item"], > div, > button');
         items.forEach(item => {
           results.dropdownItems.push({
             tag: item.tagName,
@@ -149,7 +149,7 @@ export function createApiRouter(cascades, mainWindowCDP) {
       // Find Autopilot toggle
       const autopilotElements = targetDoc.querySelectorAll('[class*="toggle"], input[type="checkbox"]');
       for (const el of autopilotElements) {
-        const parent = el.closest('.kiro-toggle-switch, [class*="toggle"]');
+        const parent = el.closest('.kiro-toggle-switch, .antigravity-toggle-switch, [class*="toggle"]');
         if (parent) {
           const label = parent.querySelector('label');
           const labelText = label ? label.textContent.toLowerCase() : '';
@@ -211,6 +211,7 @@ export function createApiRouter(cascades, mainWindowCDP) {
       // Find all toggle-like elements
       const toggleSelectors = [
         '.kiro-toggle-switch',
+        '.antigravity-toggle-switch',
         '[role="switch"]',
         'input[type="checkbox"]',
         '[class*="toggle"]',
@@ -407,7 +408,7 @@ export function createApiRouter(cascades, mainWindowCDP) {
       };
       
       // Find all snackbars
-      const snackbarSelectors = ['.kiro-snackbar', '[class*="snackbar"]', '[class*="notification"]', '[class*="toast"]'];
+      const snackbarSelectors = ['.kiro-snackbar', '.antigravity-snackbar', '[class*="snackbar"]', '[class*="notification"]', '[class*="toast"]'];
       for (const sel of snackbarSelectors) {
         try {
           const snackbars = targetDoc.querySelectorAll(sel);
@@ -559,7 +560,7 @@ export function createApiRouter(cascades, mainWindowCDP) {
           parentClass: (el.parentElement?.className || '').substring(0, 100),
           grandparentTag: el.parentElement?.parentElement?.tagName,
           grandparentClass: (el.parentElement?.parentElement?.className || '').substring(0, 100),
-          inSnackbar: !!el.closest('.kiro-snackbar, [class*="snackbar"]'),
+          inSnackbar: !!el.closest('.kiro-snackbar, .antigravity-snackbar, [class*="snackbar"]'),
           inDialog: !!el.closest('[role="dialog"], [class*="dialog"]')
         });
       }
@@ -568,7 +569,7 @@ export function createApiRouter(cascades, mainWindowCDP) {
       results.matchingElements.sort((a, b) => a.textLength - b.textLength);
       
       // Get snackbar structure
-      const snackbar = targetDoc.querySelector('.kiro-snackbar');
+      const snackbar = targetDoc.querySelector('.kiro-snackbar, .antigravity-snackbar');
       if (snackbar) {
         results.snackbarInfo = {
           className: snackbar.className,
@@ -737,32 +738,42 @@ export function createApiRouter(cascades, mainWindowCDP) {
     }
   });
 
-  // GET /tasks/:id - List task files from .kiro/specs
+  // GET /tasks/:id - List task files from .antigravity/specs (or .kiro/specs)
   router.get('/tasks/:id', async (req, res) => {
     const cascade = cascades.get(req.params.id);
     if (!cascade) return res.status(404).json({ error: 'Cascade not found' });
 
     try {
       const workspaceRoot = await getWorkspaceRoot(mainWindowCDP) || process.cwd();
-      const kiroSpecsPath = path.join(workspaceRoot, '.kiro', 'specs');
-
-      try {
-        await fs.access(kiroSpecsPath);
-      } catch (e) {
-        return res.json({ tasks: [], workspaceRoot });
-      }
-
       const tasks = [];
-      const specDirs = await fs.readdir(kiroSpecsPath, { withFileTypes: true });
 
-      for (const dir of specDirs) {
-        if (!dir.isDirectory()) continue;
-        const tasksFilePath = path.join(kiroSpecsPath, dir.name, 'tasks.md');
+      // Check both .antigravity/specs and .kiro/specs
+      const specPaths = [
+        path.join(workspaceRoot, '.antigravity', 'specs'),
+        path.join(workspaceRoot, '.kiro', 'specs')
+      ];
+
+      for (const specsPath of specPaths) {
         try {
-          const content = await fs.readFile(tasksFilePath, 'utf-8');
-          tasks.push({ name: dir.name, path: `.kiro/specs/${dir.name}/tasks.md`, content });
+          await fs.access(specsPath);
+          const specDirs = await fs.readdir(specsPath, { withFileTypes: true });
+          const configDir = path.basename(path.dirname(specsPath)); // .antigravity or .kiro
+
+          for (const dir of specDirs) {
+            if (!dir.isDirectory()) continue;
+            // Avoid duplicates if both exist
+            if (tasks.some(t => t.name === dir.name)) continue;
+
+            const tasksFilePath = path.join(specsPath, dir.name, 'tasks.md');
+            try {
+              const content = await fs.readFile(tasksFilePath, 'utf-8');
+              tasks.push({ name: dir.name, path: `${configDir}/specs/${dir.name}/tasks.md`, content });
+            } catch (e) {
+              // Task file doesn't exist, skip
+            }
+          }
         } catch (e) {
-          // Task file doesn't exist, skip
+          // Specs dir doesn't exist, skip
         }
       }
 
@@ -881,9 +892,10 @@ async function getWorkspaceRoot(mainWindowCDP) {
           const stat = await fs.stat(root);
           if (stat.isDirectory()) {
             const hasKiro = await fs.access(path.join(root, '.kiro')).then(() => true).catch(() => false);
+            const hasAntigravity = await fs.access(path.join(root, '.antigravity')).then(() => true).catch(() => false);
             const hasPackage = await fs.access(path.join(root, 'package.json')).then(() => true).catch(() => false);
             const hasGit = await fs.access(path.join(root, '.git')).then(() => true).catch(() => false);
-            if (hasKiro || hasPackage || hasGit) return root;
+            if (hasKiro || hasAntigravity || hasPackage || hasGit) return root;
           }
         } catch (e) {
           // Path doesn't exist, continue
@@ -920,7 +932,7 @@ async function findFileRecursive(dir, fileName, maxDepth = MAX_FILE_SEARCH_DEPTH
     // Then recurse into directories
     for (const entry of entries) {
       if (entry.isDirectory() &&
-        (!entry.name.startsWith('.') || entry.name === '.kiro') &&
+        (!entry.name.startsWith('.') || entry.name === '.kiro' || entry.name === '.antigravity') &&
         entry.name !== 'node_modules' &&
         entry.name !== 'dist' &&
         entry.name !== 'build' &&
@@ -969,7 +981,7 @@ async function findFileWithParent(dir, parentDirName, fileName, maxDepth = MAX_F
     // Recurse into directories
     for (const entry of entries) {
       if (entry.isDirectory() &&
-        (!entry.name.startsWith('.') || entry.name === '.kiro') &&
+        (!entry.name.startsWith('.') || entry.name === '.kiro' || entry.name === '.antigravity') &&
         entry.name !== 'node_modules' &&
         entry.name !== 'dist' &&
         entry.name !== 'build' &&
@@ -1005,8 +1017,8 @@ async function collectWorkspaceFiles(workspaceRoot) {
       const entries = await fs.readdir(dir, { withFileTypes: true });
 
       for (const entry of entries) {
-        // Skip hidden files (except .kiro and .github), node_modules, and build directories
-        if ((entry.name.startsWith('.') && entry.name !== '.kiro' && entry.name !== '.github') ||
+        // Skip hidden files (except .kiro, .antigravity and .github), node_modules, and build directories
+        if ((entry.name.startsWith('.') && entry.name !== '.kiro' && entry.name !== '.antigravity' && entry.name !== '.github') ||
           entry.name === 'node_modules' ||
           entry.name === 'dist' ||
           entry.name === 'build' ||

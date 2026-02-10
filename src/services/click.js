@@ -16,7 +16,11 @@ function buildClickScript(clickInfo) {
 
   return `(function() {
     let targetDoc = document;
-    const activeFrame = document.getElementById('active-frame');
+
+    // Check for Kiro's active-frame or Antigravity's agentPanel
+    let activeFrame = document.getElementById('active-frame');
+    if (!activeFrame) activeFrame = document.getElementById('antigravity.agentPanel');
+
     if (activeFrame && activeFrame.contentDocument) targetDoc = activeFrame.contentDocument;
     
     const info = ${safeClickInfo};
@@ -187,13 +191,13 @@ function buildClickScript(clickInfo) {
     // Model Selector Button Click
     // =========================================================================
     if (isModelSelector && !element) {
-      // Strategy 1: Find Kiro's specific dropdown trigger
-      const kiroDropdownTrigger = targetDoc.querySelector('button.kiro-dropdown-trigger[aria-haspopup="true"]');
-      if (kiroDropdownTrigger && isVisible(kiroDropdownTrigger)) {
-        const triggerText = (kiroDropdownTrigger.textContent || '').toLowerCase();
+      // Strategy 1: Find specific dropdown trigger (Kiro or Antigravity)
+      const dropdownTrigger = targetDoc.querySelector('button.kiro-dropdown-trigger[aria-haspopup="true"], button.antigravity-dropdown-trigger[aria-haspopup="true"]');
+      if (dropdownTrigger && isVisible(dropdownTrigger)) {
+        const triggerText = (dropdownTrigger.textContent || '').toLowerCase();
         if (modelNames.some(m => triggerText.includes(m))) {
-          element = kiroDropdownTrigger;
-          matchMethod = 'kiro-dropdown-trigger';
+          element = dropdownTrigger;
+          matchMethod = 'specific-dropdown-trigger';
         }
       }
       
@@ -214,7 +218,7 @@ function buildClickScript(clickInfo) {
       // Strategy 3: Find by class patterns
       if (!element) {
         const modelSelectors = [
-          '.kiro-dropdown-trigger',
+          '.kiro-dropdown-trigger', '.antigravity-dropdown-trigger',
           '[class*="model-selector"]', '[class*="modelSelector"]',
           '[class*="model-dropdown"]', '[class*="modelDropdown"]',
           'button[class*="dropdown-trigger"]'
@@ -244,12 +248,12 @@ function buildClickScript(clickInfo) {
       const searchModelName = findModelName(searchText);
       
       // Check if dropdown is currently open
-      const openDropdown = targetDoc.querySelector('.kiro-dropdown-menu, [class*="dropdown-menu"][class*="open"], [role="listbox"], [role="menu"]');
+      const openDropdown = targetDoc.querySelector('.kiro-dropdown-menu, .antigravity-dropdown-menu, [class*="dropdown-menu"][class*="open"], [role="listbox"], [role="menu"]');
       const isDropdownOpen = openDropdown && isVisible(openDropdown);
       
       // If dropdown is NOT open, we need to open it first
       if (!isDropdownOpen) {
-        const dropdownTrigger = targetDoc.querySelector('.kiro-dropdown-trigger[aria-haspopup="true"], button[aria-haspopup="true"], button[aria-haspopup="listbox"]');
+        const dropdownTrigger = targetDoc.querySelector('.kiro-dropdown-trigger[aria-haspopup="true"], .antigravity-dropdown-trigger[aria-haspopup="true"], button[aria-haspopup="true"], button[aria-haspopup="listbox"]');
         if (dropdownTrigger && isVisible(dropdownTrigger)) {
           const triggerText = (dropdownTrigger.textContent || '').toLowerCase();
           if (modelNames.some(m => triggerText.includes(m))) {
@@ -259,9 +263,9 @@ function buildClickScript(clickInfo) {
         }
       }
       
-      // Strategy 1: Find Kiro's specific dropdown items
-      const kiroDropdownItems = targetDoc.querySelectorAll('.kiro-dropdown-item, .kiro-dropdown-menu > div');
-      for (const item of kiroDropdownItems) {
+      // Strategy 1: Find specific dropdown items (Kiro/Antigravity)
+      const dropdownItems = targetDoc.querySelectorAll('.kiro-dropdown-item, .antigravity-dropdown-item, .kiro-dropdown-menu > div, .antigravity-dropdown-menu > div');
+      for (const item of dropdownItems) {
         if (!isVisible(item)) continue;
         const itemText = (item.textContent || '').trim().toLowerCase();
         const itemModelName = findModelName(itemText);
@@ -272,7 +276,7 @@ function buildClickScript(clickInfo) {
           
           if (!searchVersion || !itemVersion || searchVersion === itemVersion) {
             element = item;
-            matchMethod = 'kiro-dropdown-item';
+            matchMethod = 'specific-dropdown-item';
             break;
           }
         }
@@ -301,7 +305,7 @@ function buildClickScript(clickInfo) {
       
       // Strategy 3: Find any clickable element in dropdown with matching model name
       if (!element && searchText && searchModelName) {
-        const dropdownMenu = targetDoc.querySelector('.kiro-dropdown-menu, [class*="dropdown-menu"], [role="listbox"], [role="menu"]');
+        const dropdownMenu = targetDoc.querySelector('.kiro-dropdown-menu, .antigravity-dropdown-menu, [class*="dropdown-menu"], [role="listbox"], [role="menu"]');
         if (dropdownMenu) {
           const allItems = dropdownMenu.querySelectorAll('*');
           for (const item of allItems) {
@@ -345,7 +349,7 @@ function buildClickScript(clickInfo) {
         if (element) matchMethod = 'toggle-id';
       }
       if (!element && info.text) {
-        const toggles = targetDoc.querySelectorAll('.kiro-toggle-switch, [role="switch"]');
+        const toggles = targetDoc.querySelectorAll('.kiro-toggle-switch, .antigravity-toggle-switch, [role="switch"]');
         for (const t of toggles) {
           const label = t.querySelector('label');
           if (label && label.textContent.trim().toLowerCase().includes(info.text.toLowerCase())) {
@@ -379,10 +383,15 @@ function buildClickScript(clickInfo) {
       // Strategy 1: Find clickable divs/buttons in snackbar body or welcome screens with matching text
       const dialogSelectors = [
         '.kiro-snackbar-body > div',
+        '.antigravity-snackbar-body > div',
         '.kiro-snackbar-body [class*="choice"]',
+        '.antigravity-snackbar-body [class*="choice"]',
         '.kiro-snackbar-body [class*="option"]',
+        '.antigravity-snackbar-body [class*="option"]',
         '.kiro-snackbar [class*="choice"]',
+        '.antigravity-snackbar [class*="choice"]',
         '.kiro-snackbar [class*="option"]',
+        '.antigravity-snackbar [class*="option"]',
         '[class*="dialog"] [class*="choice"]',
         '[class*="dialog"] [class*="option"]',
         '[class*="modal"] [class*="choice"]',
@@ -465,7 +474,7 @@ function buildClickScript(clickInfo) {
       
       // Strategy 2: Find any clickable element in snackbar body with matching text
       if (!element && searchText) {
-        const snackbarBody = targetDoc.querySelector('.kiro-snackbar-body');
+        const snackbarBody = targetDoc.querySelector('.kiro-snackbar-body, .antigravity-snackbar-body');
         if (snackbarBody) {
           console.log('[Click Debug] Searching in snackbar-body');
           const allClickables = snackbarBody.querySelectorAll('div, button, [role="button"], [tabindex="0"], [class*="cursor-pointer"]');
@@ -485,7 +494,7 @@ function buildClickScript(clickInfo) {
       
       // Strategy 3: Find by cursor pointer style in snackbar/dialog areas
       if (!element && searchText) {
-        const dialogContainers = targetDoc.querySelectorAll('.kiro-snackbar, [role="dialog"], [role="alertdialog"], [class*="modal"], [class*="dialog"], [class*="welcome"], [class*="Welcome"]');
+        const dialogContainers = targetDoc.querySelectorAll('.kiro-snackbar, .antigravity-snackbar, [role="dialog"], [role="alertdialog"], [class*="modal"], [class*="dialog"], [class*="welcome"], [class*="Welcome"]');
         console.log('[Click Debug] Found', dialogContainers.length, 'dialog/snackbar containers');
         for (const container of dialogContainers) {
           if (!isVisible(container)) continue;
@@ -541,7 +550,7 @@ function buildClickScript(clickInfo) {
       const searchText = (info.text || '').trim().toLowerCase();
       const searchAriaLabel = (info.ariaLabel || '').trim().toLowerCase();
       
-      const snackbarButtons = targetDoc.querySelectorAll('.kiro-snackbar button, .kiro-snackbar-actions button, .kiro-snackbar-header button');
+      const snackbarButtons = targetDoc.querySelectorAll('.kiro-snackbar button, .antigravity-snackbar button, .kiro-snackbar-actions button, .antigravity-snackbar-actions button, .kiro-snackbar-header button, .antigravity-snackbar-header button');
       
       // Strategy 1: Find by text
       for (const btn of snackbarButtons) {
@@ -561,7 +570,7 @@ function buildClickScript(clickInfo) {
         for (const btn of snackbarButtons) {
           if (!isVisible(btn)) continue;
           const btnAriaLabel = (btn.getAttribute('aria-label') || '').toLowerCase();
-          const isExpandBtn = btnAriaLabel.includes('expand') || btn.classList.contains('kiro-snackbar-expand');
+          const isExpandBtn = btnAriaLabel.includes('expand') || btn.classList.contains('kiro-snackbar-expand') || btn.classList.contains('antigravity-snackbar-expand');
           
           if (isExpandBtn) continue;
           
@@ -572,7 +581,7 @@ function buildClickScript(clickInfo) {
             break;
           }
           
-          const isIconBtn = btn.classList.contains('kiro-icon-button');
+          const isIconBtn = btn.classList.contains('kiro-icon-button') || btn.classList.contains('antigravity-icon-button');
           const btnText = (btn.textContent || '').trim();
           if (isIconBtn && !btnText && !isExpandBtn) {
             element = btn;
@@ -612,7 +621,7 @@ function buildClickScript(clickInfo) {
       
       // Strategy 5: Find expand/collapse arrow (only if explicitly requested)
       if (!element && (searchText.includes('expand') || searchAriaLabel.includes('expand'))) {
-        const expandArrow = targetDoc.querySelector('.kiro-snackbar [class*="expand"], .kiro-snackbar [class*="arrow"], .kiro-snackbar [class*="chevron"], .kiro-snackbar button[aria-label*="expand" i]');
+        const expandArrow = targetDoc.querySelector('.kiro-snackbar [class*="expand"], .antigravity-snackbar [class*="expand"], .kiro-snackbar [class*="arrow"], .antigravity-snackbar [class*="arrow"], .kiro-snackbar [class*="chevron"], .antigravity-snackbar [class*="chevron"], .kiro-snackbar button[aria-label*="expand" i], .antigravity-snackbar button[aria-label*="expand" i]');
         if (expandArrow && isVisible(expandArrow)) {
           element = expandArrow;
           matchMethod = 'snackbar-expand';
@@ -729,13 +738,13 @@ function buildClickScript(clickInfo) {
     // Close Button
     // =========================================================================
     if (isCloseButton && !element) {
-      const closeButtons = targetDoc.querySelectorAll('[aria-label="close"], .kiro-tabs-item-close, [class*="close"]');
+      const closeButtons = targetDoc.querySelectorAll('[aria-label="close"], .kiro-tabs-item-close, .antigravity-tabs-item-close, [class*="close"]');
       if (info.parentTabLabel) {
         const searchLabel = info.parentTabLabel.trim().toLowerCase();
         for (const btn of closeButtons) {
           const parentTab = btn.closest('[role="tab"]');
           if (parentTab) {
-            const labelEl = parentTab.querySelector('.kiro-tabs-item-label, [class*="label"]');
+            const labelEl = parentTab.querySelector('.kiro-tabs-item-label, .antigravity-tabs-item-label, [class*="label"]');
             const tabLabel = labelEl ? labelEl.textContent.trim().toLowerCase() : '';
             if (tabLabel.includes(searchLabel) || searchLabel.includes(tabLabel)) {
               element = btn;
@@ -764,7 +773,7 @@ function buildClickScript(clickInfo) {
       const allTabs = targetDoc.querySelectorAll('[role="tab"]');
       const searchText = (info.tabLabel || info.text || '').trim().toLowerCase();
       for (const tab of allTabs) {
-        const labelEl = tab.querySelector('.kiro-tabs-item-label, [class*="label"]');
+        const labelEl = tab.querySelector('.kiro-tabs-item-label, .antigravity-tabs-item-label, [class*="label"]');
         const tabText = labelEl ? labelEl.textContent.trim().toLowerCase() : tab.textContent.trim().toLowerCase();
         if (searchText && (tabText.includes(searchText) || searchText.includes(tabText))) {
           element = tab;
@@ -886,7 +895,7 @@ function buildClickScript(clickInfo) {
       const targetIndex = typeof info.elementIndex === 'number' ? info.elementIndex : -1;
       
       // Extended selectors to include dialog/snackbar elements AND generic divs with cursor pointer
-      const allElements = targetDoc.querySelectorAll('button, [role="button"], [role="tab"], [role="menuitem"], [role="option"], [role="listitem"], a, [tabindex="0"], [class*="cursor-pointer"], .kiro-snackbar-body > div, [class*="choice"], [class*="option"], [class*="action"], [class*="card"], [class*="Card"]');
+      const allElements = targetDoc.querySelectorAll('button, [role="button"], [role="tab"], [role="menuitem"], [role="option"], [role="listitem"], a, [tabindex="0"], [class*="cursor-pointer"], .kiro-snackbar-body > div, .antigravity-snackbar-body > div, [class*="choice"], [class*="option"], [class*="action"], [class*="card"], [class*="Card"]');
       
       // Collect ALL matching elements first (for index-based selection)
       const matchingElements = [];
@@ -1159,7 +1168,7 @@ function buildClickScript(clickInfo) {
         if (el.onclick) score += 10;
         
         // Boost for elements in snackbar/dialog
-        if (el.closest('.kiro-snackbar, [role="dialog"], [class*="modal"]')) score += 10;
+        if (el.closest('.kiro-snackbar, .antigravity-snackbar, [role="dialog"], [class*="modal"]')) score += 10;
         
         if (score > bestScore) {
           bestScore = score;
