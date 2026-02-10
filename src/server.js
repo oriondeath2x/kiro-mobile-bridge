@@ -120,8 +120,11 @@ async function discoverTargets() {
         // Legacy/Fallback check
         const isLegacyAgent = (url.includes('kiroagent') || url.includes('vscode-webview'));
 
+        // Relax type check for Antigravity agent panels as they might appear as pages
+        const isValidType = target.type !== 'page' || isAntigravityAgent;
+
         return (isAntigravityAgent || isLegacyAgent) &&
-               target.webSocketDebuggerUrl && target.type !== 'page';
+               target.webSocketDebuggerUrl && isValidType;
       });
       
       for (const target of kiroAgentTargets) {
@@ -166,17 +169,45 @@ async function discoverTargets() {
       console.debug(`[Discovery] Error scanning port ${port}: ${err.message}`);
     }
   }
+
+  // Fallback: If no dedicated agent targets found, use Main Window as fallback
+  // This supports cases where the agent is an iframe within the main window (not a separate target)
+  const FALLBACK_ID = 'main-window-fallback';
+  if (foundCascadeIds.size === 0 && mainWindowCDP.connection) {
+    foundCascadeIds.add(FALLBACK_ID);
+    if (!cascades.has(FALLBACK_ID)) {
+      console.log('[Discovery] No agent targets found. Falling back to Main Window.');
+      stateChanged = true;
+      cascades.set(FALLBACK_ID, {
+        id: FALLBACK_ID,
+        cdp: mainWindowCDP.connection, // Share connection
+        metadata: { windowTitle: 'Main Window (Fallback)', chatTitle: 'Antigravity', isActive: true },
+        snapshot: null,
+        css: null,
+        snapshotHash: null,
+        editor: null,
+        editorHash: null,
+        isFallback: true // Mark as fallback to prevent closing shared connection
+      });
+      broadcastCascadeList();
+    }
+  }
   
   // Clean up disconnected targets
   for (const [cascadeId, cascade] of cascades) {
     if (!foundCascadeIds.has(cascadeId)) {
       console.log(`[Discovery] Target no longer available: ${cascadeId}`);
       stateChanged = true;
-      try { 
-        cascade.cdp.close(); 
-      } catch (e) {
-        console.debug(`[Discovery] Error closing cascade ${cascadeId}: ${e.message}`);
+
+      // Only close connection if it's NOT a fallback (shared) connection
+      if (!cascade.isFallback) {
+        try {
+          cascade.cdp.close();
+        } catch (e) {
+          console.debug(`[Discovery] Error closing cascade ${cascadeId}: ${e.message}`);
+        }
       }
+
       cascades.delete(cascadeId);
       broadcastCascadeList();
     }
